@@ -8,6 +8,7 @@
  */
 
 const {onRequest} = require("firebase-functions/v2/https");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const sa = require("./key.json")
@@ -18,16 +19,22 @@ const app =admin.initializeApp({
 
 
 exports.testFunc = onRequest((request, response) => {
-  coreLogic()
-  response.send("Done Processing!");
+    if (request.query.pw !== "mai1234") {
+        response.status(401).send("Unauthorized");
+        return
+    }
+    coreLogic()
+    response.send("Done Processing!");
+});
+
+exports.memoizeNotifier = onSchedule("every minute", () => {
+    coreLogic()
+    logger.info("Done Processing");
 });
 
 const coreLogic =  async () => {
     logger.info("Starting to check the notifier task")
 
-    
-
-    
    const db  = app.firestore()
 
    let focusedDate = new Date(new Date().getTime() + 30 * 60000)
